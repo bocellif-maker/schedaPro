@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>FitTracker — Boccio</title>
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22FitTracker%22%2C%22display%22%3A%22standalone%22%7D">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+/* ── BASE ── */
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0a0a0f;color:#f1f5f9;font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+h1,h2,h3,.font-display{font-family:'Barlow Condensed',sans-serif;letter-spacing:0.02em}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:#111827}
+::-webkit-scrollbar-thumb{background:#374151;border-radius:3px}
+input,select,textarea{background:#1f2937;border:1px solid #374151;border-radius:8px;color:#f1f5f9;font-family:'DM Sans',sans-serif;font-size:14px;padding:10px 14px;width:100%;outline:none;transition:border-color .2s}
+input:focus,select:focus,textarea:focus{border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+input::placeholder,textarea::placeholder{color:#6b7280}
+select option{background:#1f2937}
+/* ── ANIMATIONS ── */
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.slide-up{animation:slideUp .25s ease forwards}
+.fade-in{animation:fadeIn .2s ease forwards}
+/* ── BUTTONS ── */
+.btn{border:none;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;padding:10px 18px;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:#3b82f6;color:#fff}.btn-primary:hover{background:#2563eb}
+.btn-danger{background:#ef4444;color:#fff}.btn-danger:hover{background:#dc2626}
+.btn-success{background:#22c55e;color:#fff}.btn-success:hover{background:#16a34a}
+.btn-ghost{background:transparent;color:#9ca3af;border:1px solid #374151}.btn-ghost:hover{background:#1f2937;color:#f1f5f9}
+.btn-sm{padding:6px 12px;font-size:13px;border-radius:6px}
+.btn-icon{padding:7px;border-radius:6px;background:transparent;border:1px solid #374151;color:#9ca3af;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;justify-content:center}
+.btn-icon:hover{background:#1f2937;color:#f1f5f9}
+.btn-icon:disabled{opacity:.35;cursor:default}
+/* ── CARDS / BADGES ── */
+.card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:20px}
+.badge{border-radius:6px;font-size:12px;font-weight:500;padding:3px 9px;display:inline-block}
+.badge-blue{background:rgba(59,130,246,.15);color:#60a5fa}
+.badge-green{background:rgba(34,197,94,.15);color:#4ade80}
+.badge-amber{background:rgba(245,158,11,.15);color:#fbbf24}
+.badge-purple{background:rgba(139,92,246,.15);color:#a78bfa}
+.badge-red{background:rgba(239,68,68,.15);color:#f87171}
+.stat-card{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:16px 20px}
+/* ── EXERCISE CARD ── */
+.ex-card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:14px 16px;transition:border-color .2s,background .2s}
+.ex-card.done{border-color:#22c55e;background:rgba(34,197,94,.05)}
+.ex-card.drag-over{border:1px dashed #3b82f6 !important;background:rgba(59,130,246,.06) !important}
+.ex-card.dragging{opacity:.35;transform:scale(.98)}
+/* ── TOAST ── */
+.toast{align-items:center;border-radius:10px;bottom:90px;box-shadow:0 10px 40px rgba(0,0,0,.4);color:#fff;display:flex;font-size:14px;font-weight:500;gap:10px;left:50%;max-width:340px;padding:13px 18px;position:fixed;transform:translateX(-50%);z-index:9999;animation:slideUp .3s ease;white-space:nowrap}
+/* ── MODAL ── */
+.modal-overlay{background:rgba(0,0,0,.75);backdrop-filter:blur(4px);bottom:0;display:flex;align-items:center;justify-content:center;left:0;position:fixed;right:0;top:0;z-index:999;padding:16px}
+.modal{background:#111827;border:1px solid #1f2937;border-radius:14px;max-height:90vh;overflow-y:auto;width:100%;max-width:480px;animation:slideUp .25s ease}
+/* ── BOTTOM NAV ── */
+.bottom-nav{background:#111827;border-top:1px solid #1f2937;bottom:0;display:flex;left:0;position:fixed;right:0;z-index:100}
+.bnav{align-items:center;color:#6b7280;cursor:pointer;display:flex;flex:1;flex-direction:column;font-size:11px;font-weight:500;gap:4px;padding:10px 0;transition:color .15s}
+.bnav.active{color:#3b82f6}
+.bnav svg{width:22px;height:22px;stroke-width:2}
+/* ── DRAG HANDLE ── */
+.drag-handle{cursor:grab;color:#4b5563;display:flex;align-items:center;padding:4px;border-radius:4px;transition:color .15s}
+.drag-handle:hover{color:#9ca3af;background:rgba(255,255,255,.05)}
+.drag-handle:active{cursor:grabbing}
+/* ── DAY PILL ── */
+.day-pill{padding:9px 13px;border-radius:8px;cursor:pointer;border:1px solid transparent;background:#111827;color:#d1d5db;font-size:14px;font-weight:500;transition:all .15s;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.day-pill:hover{background:#1f2937}
+.day-pill.active{border-color:#3b82f6;background:rgba(59,130,246,.1);color:#60a5fa}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback, useMemo } = React;
+
+// ═══════════════════════════════════════════════════════════════
+//  CONSTANTS & HELPERS
+// ═══════════════════════════════════════════════════════════════
+const STORAGE_KEY = 'fittracker-v2';
+
+const MG_COLORS = {1:'badge-blue',2:'badge-green',3:'badge-amber',4:'badge-purple',5:'badge-red',6:'badge-green',7:'badge-amber',8:'badge-blue'};
+
+function uid(){ return Math.random().toString(36).slice(2,9)+Date.now().toString(36); }
+function today(){ return new Date().toISOString().split('T')[0]; }
+
+// ═══════════════════════════════════════════════════════════════
+//  SEED DATA — new scalable structure
+//  Each assignment holds its own sets/reps/weight/notes/history
+// ═══════════════════════════════════════════════════════════════
+const SEED = {
+  // Muscle groups library
+  muscleGroups:[
+    {id:1,name:'Petto'},{id:2,name:'Schiena'},{id:3,name:'Spalle'},
+    {id:4,name:'Bicipiti'},{id:5,name:'Tricipiti'},{id:6,name:'Gambe'},
+    {id:7,name:'Addome'},{id:8,name:'Cardio/Campo'},
+  ],
+  // Plans (schede)
+  plans:[
+    {id:1,name:'Push Day',notes:'Mar + Ven — in stagione calcio'},
+    {id:2,name:'Pull Day',notes:'Lun + Gio — in stagione calcio'},
+    {id:3,name:'Leg Day',notes:'Mercoledì off-season'},
+  ],
+  // Days per plan: { [planId]: [{id,planId,label,order}] }
+  days:{
+    1:[{id:'d1a',planId:1,label:'Martedì',order:0},{id:'d1b',planId:1,label:'Venerdì',order:1}],
+    2:[{id:'d2a',planId:2,label:'Lunedì',order:0},{id:'d2b',planId:2,label:'Giovedì',order:1}],
+    3:[{id:'d3a',planId:3,label:'Mercoledì',order:0}],
+  },
+  // Assignments: each is an independent exercise instance
+  // { id, dayId, planId, order, exerciseName, mgId,
+  //   sets, reps, weight, prevWeight, rest, notes,
+  //   completed, weightHistory:[{date,weight}] }
+  assignments:[
+    // ── PUSH Martedì ──
+    {id:'pa1',dayId:'d1a',planId:1,order:0,exerciseName:'Dip Zavorrati',mgId:1,sets:5,reps:'5',weight:'+5 kg',prevWeight:'',rest:150,notes:'Esercizio principale push',completed:false,weightHistory:[]},
+    {id:'pa2',dayId:'d1a',planId:1,order:1,exerciseName:'Panca Piana Bilanciere',mgId:1,sets:3,reps:'',weight:'',prevWeight:'',rest:120,notes:'Sostituisce dip corpo libero — peso da definire',completed:false,weightHistory:[]},
+    {id:'pa3',dayId:'d1a',planId:1,order:2,exerciseName:'Panca 30° Manubrio',mgId:1,sets:3,reps:'10',weight:'14 kg',prevWeight:'',rest:90,notes:'',completed:false,weightHistory:[]},
+    {id:'pa4',dayId:'d1a',planId:1,order:3,exerciseName:'Pushdown Tricipiti',mgId:5,sets:3,reps:'12',weight:'20 kg',prevWeight:'',rest:75,notes:'',completed:false,weightHistory:[]},
+    {id:'pa5',dayId:'d1a',planId:1,order:4,exerciseName:'Tricipite Overhead Manubrio',mgId:5,sets:3,reps:'10',weight:'5 kg',prevWeight:'',rest:75,notes:'3 serie',completed:false,weightHistory:[]},
+    {id:'pa6',dayId:'d1a',planId:1,order:5,exerciseName:'Alzate Laterali',mgId:3,sets:3,reps:'12',weight:'10 kg',prevWeight:'',rest:60,notes:'',completed:false,weightHistory:[]},
+    {id:'pa7',dayId:'d1a',planId:1,order:6,exerciseName:'Spinte Frontali Manubrio',mgId:3,sets:3,reps:'10',weight:'10 kg',prevWeight:'',rest:75,notes:'',completed:false,weightHistory:[]},
+    // ── PUSH Venerdì ──
+    {id:'pb1',dayId:'d1b',planId:1,order:0,exerciseName:'Dip Zavorrati',mgId:1,sets:5,reps:'5',weight:'+5 kg',prevWeight:'',rest:150,notes:'Esercizio principale push',completed:false,weightHistory:[]},
+    {id:'pb2',dayId:'d1b',planId:1,order:1,exerciseName:'Panca Piana Bilanciere',mgId:1,sets:3,reps:'',weight:'',prevWeight:'',rest:120,notes:'Da aggiornare',completed:false,weightHistory:[]},
+    {id:'pb3',dayId:'d1b',planId:1,order:2,exerciseName:'Panca 30° Manubrio',mgId:1,sets:3,reps:'10',weight:'14 kg',prevWeight:'',rest:90,notes:'',completed:false,weightHistory:[]},
+    {id:'pb4',dayId:'d1b',planId:1,order:3,exerciseName:'Pushdown Tricipiti',mgId:5,sets:3,reps:'12',weight:'20 kg',prevWeight:'',rest:75,notes:'',completed:false,weightHistory:[]},
+    {id:'pb5',dayId:'d1b',planId:1,order:4,exerciseName:'Tricipite Overhead Manubrio',mgId:5,sets:3,reps:'10',weight:'5 kg',prevWeight:'',rest:75,notes:'',completed:false,weightHistory:[]},
+    {id:'pb6',dayId:'d1b',planId:1,order:5,exerciseName:'Alzate Laterali',mgId:3,sets:3,reps:'12',weight:'10 kg',prevWeight:'',rest:60,notes:'',completed:false,weightHistory:[]},
+    {id:'pb7',dayId:'d1b',planId:1,order:6,exerciseName:'Spinte Frontali Manubrio',mgId:3,sets:3,reps:'10',weight:'10 kg',prevWeight:'',rest:75,notes:'',completed:false,weightHistory:[]},
+    // ── PULL Lunedì ──
+    {id:'qa1',dayId:'d2a',planId:2,order:0,exerciseName:'Trazioni Zavorrate',mgId:2,sets:5,reps:'5',weight:'+5 kg',prevWeight:'',rest:150,notes:'Esercizio principale pull',completed:false,weightHistory:[]},
+    {id:'qa2',dayId:'d2a',planId:2,order:1,exerciseName:'Face Pull',mgId:2,sets:3,reps:'',weight:'',prevWeight:'',rest:60,notes:'Sostituisce trazioni con elastico',completed:false,weightHistory:[]},
+    {id:'qa3',dayId:'d2a',planId:2,order:2,exerciseName:'EZ Curl',mgId:4,sets:3,reps:'8',weight:'28 kg',prevWeight:'24 kg',rest:75,notes:'',completed:false,weightHistory:[{date:'2025-04-01',weight:'24 kg'},{date:'2025-04-15',weight:'28 kg'}]},
+    {id:'qa4',dayId:'d2a',planId:2,order:3,exerciseName:'Rematore',mgId:2,sets:3,reps:'10',weight:'40 kg',prevWeight:'',rest:90,notes:'',completed:false,weightHistory:[]},
+    {id:'qa5',dayId:'d2a',planId:2,order:4,exerciseName:'Hammer Curl Manubrio',mgId:4,sets:3,reps:'8',weight:'12 kg',prevWeight:'10 kg',rest:75,notes:'',completed:false,weightHistory:[{date:'2025-04-01',weight:'10 kg'},{date:'2025-04-15',weight:'12 kg'}]},
+    {id:'qa6',dayId:'d2a',planId:2,order:5,exerciseName:'Lat Machine',mgId:2,sets:3,reps:'10',weight:'40 kg',prevWeight:'',rest:75,notes:'',completed:false,weightHistory:[]},
+    // ── PULL Giovedì ──
+    {id:'qb1',dayId:'d2b',planId:2,order:0,exerciseName:'Trazioni Zavorrate',mgId:2,sets:5,reps:'5',weight:'+5 kg',prevWeight:'',rest:150,notes:'',completed:false,weightHistory:[]},
+    {id:'qb2',dayId:'d2b',planId:2,order:1,exerciseName:'Face Pull',mgId:2,sets:3,reps:'',weight:'',prevWeight:'',rest:60,notes:'',completed:false,weightHistory:[]},
+    {id:'qb3',dayId:'d2b',planId:2,order:2,exerciseName:'EZ Curl',mgId:4,sets:3,reps:'8',weight:'28 kg',prevWeight:'24 kg',rest:75,notes:'',completed:false,weightHistory:[{date:'2025-04-01',weight:'24 kg'},{date:'2025-04-15',weight:'28 kg'}]},
+    {id:'qb4',dayId:'d2b',planId:2,order:3,exerciseName:'Rematore',mgId:2,sets:3,reps:'10',weight:'40 kg',prevWeight:'',rest:90,notes:'',completed:false,weightHistory:[]},
+    {id:'qb5',dayId:'d2b',planId:2,order:4,exerciseName:'Hammer Curl Manubrio',mgId:4,sets:3,reps:'8',weight:'12 kg',prevWeight:'10 kg',rest:75,notes:'',completed:false,weightHistory:[{date:'2025-04-01',weight:'10 kg'},{date:'2025-04-15',weight:'12 kg'}]},
+    {id:'qb6',dayId:'d2b',planId:2,order:5,exerciseName:'Lat Machine',mgId:2,sets:3,reps:'10',weight:'40 kg',prevWeight:'',rest:75,notes:'',completed:false,weightHistory:[]},
+    // ── LEG DAY Mercoledì ──
+    {id:'la1',dayId:'d3a',planId:3,order:0,exerciseName:'Riscaldamento Dinamico',mgId:8,sets:1,reps:'8 min',weight:'',prevWeight:'',rest:0,notes:'Skip, calciata, leg swing',completed:false,weightHistory:[]},
+    {id:'la2',dayId:'d3a',planId:3,order:1,exerciseName:'Box Jump Esplosivo',mgId:6,sets:5,reps:'5',weight:'',prevWeight:'',rest:120,notes:'Atterraggio morbido — pliometria',completed:false,weightHistory:[]},
+    {id:'la3',dayId:'d3a',planId:3,order:2,exerciseName:'Drop Jump',mgId:6,sets:4,reps:'5',weight:'',prevWeight:'',rest:120,notes:'Caduta da 30cm + rimbalzo immediato',completed:false,weightHistory:[]},
+    {id:'la4',dayId:'d3a',planId:3,order:3,exerciseName:'Squat con Bilanciere',mgId:6,sets:4,reps:'6',weight:'',prevWeight:'',rest:150,notes:'Carico da definire a maggio',completed:false,weightHistory:[]},
+    {id:'la5',dayId:'d3a',planId:3,order:4,exerciseName:'Stacco Rumeno (RDL)',mgId:6,sets:4,reps:'8',weight:'',prevWeight:'',rest:120,notes:'Schiena neutra, enfasi sull\'allungamento',completed:false,weightHistory:[]},
+    {id:'la6',dayId:'d3a',planId:3,order:5,exerciseName:'Split Squat Bulgaro',mgId:6,sets:3,reps:'8/gamba',weight:'',prevWeight:'',rest:90,notes:'',completed:false,weightHistory:[]},
+    {id:'la7',dayId:'d3a',planId:3,order:6,exerciseName:'Nordic Curl',mgId:6,sets:3,reps:'6',weight:'',prevWeight:'',rest:120,notes:'Prevenzione infortuni ischio-crurali',completed:false,weightHistory:[]},
+    {id:'la8',dayId:'d3a',planId:3,order:7,exerciseName:'Affondi Laterali con Manubri',mgId:6,sets:3,reps:'10/gamba',weight:'',prevWeight:'',rest:90,notes:'Piano frontale — adduttori',completed:false,weightHistory:[]},
+    {id:'la9',dayId:'d3a',planId:3,order:8,exerciseName:'Calf Raise Mono-Podalico',mgId:6,sets:4,reps:'12/gamba',weight:'',prevWeight:'',rest:60,notes:'Su gradino, range completo',completed:false,weightHistory:[]},
+  ],
+  completed:[], // workout session log
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  STORAGE
+// ═══════════════════════════════════════════════════════════════
+const db = {
+  load(){ try{ const d=localStorage.getItem(STORAGE_KEY); return d?JSON.parse(d):null; }catch{ return null; } },
+  save(d){ try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(d)); }catch(e){ console.warn('storage full',e); } },
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  HOOKS
+// ═══════════════════════════════════════════════════════════════
+function useToast(){
+  const [t,set]=useState(null);
+  const show=useCallback((msg,type='success')=>{ set({msg,type,k:Date.now()}); setTimeout(()=>set(null),3000); },[]);
+  return [t,show];
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ICONS (SVG path strings)
+// ═══════════════════════════════════════════════════════════════
+const IC={
+  home:'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10',
+  calendar:'M8 2v4M16 2v4M3 10h18M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  chart:'M18 20V10M12 20V4M6 20v-6',
+  history:'M12 8v4l3 3M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z',
+  download:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3',
+  upload:'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',
+  plus:'M12 5v14M5 12h14',
+  edit:'M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z',
+  trash:'M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2',
+  check:'M20 6L9 17l-5-5',
+  timer:'M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zM12 6v6l4 2',
+  copy:'M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6H8zM14 2v6h6',
+  up:'M12 19V5M5 12l7-7 7 7',
+  down:'M12 5v14M5 12l7 7 7-7',
+  grip:'M9 5h.01M15 5h.01M9 9h.01M15 9h.01M9 13h.01M15 13h.01M9 17h.01M15 17h.01',
+  dumbbell:'M6.5 6.5h11M6.5 17.5h11M3 9v6M21 9v6M7 3v18M17 3v18',
+  reset:'M1 4v6h6M23 20v-6h-6M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15',
+  x:'M18 6L6 18M6 6l12 12',
+};
+function Ico({d,s=18,c}){ return <svg width={s} height={s} fill="none" stroke={c||'currentColor'} strokeWidth="2" viewBox="0 0 24 24"><path d={d}/></svg>; }
+
+// ═══════════════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════════════
+function Toast({t}){
+  if(!t) return null;
+  const bg={success:'#22c55e',error:'#ef4444',info:'#3b82f6',warning:'#f59e0b'};
+  return <div key={t.k} className="toast" style={{background:bg[t.type]||bg.success}}>
+    {t.type==='success'&&<Ico d={IC.check} s={16}/>}
+    {t.type==='error'&&<Ico d={IC.x} s={16}/>}
+    {t.type==='info'&&<Ico d={IC.timer} s={16}/>}
+    {t.msg}
+  </div>;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  MODAL WRAPPER
+// ═══════════════════════════════════════════════════════════════
+function Modal({title,onClose,children,wide=false}){
+  return <div className="modal-overlay fade-in" onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div className="modal" style={{maxWidth:wide?640:500}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'18px 20px 0'}}>
+        <h3 style={{fontFamily:'Barlow Condensed',fontSize:22,fontWeight:700}}>{title}</h3>
+        <button className="btn-icon" onClick={onClose}><Ico d={IC.x} s={16}/></button>
+      </div>
+      <div style={{padding:'14px 20px 20px'}}>{children}</div>
+    </div>
+  </div>;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  FORM FIELD HELPER
+// ═══════════════════════════════════════════════════════════════
+function FF({label,children}){
+  return <div style={{marginBottom:13}}>
+    <label style={{display:'block',color:'#9ca3af',fontSize:12,fontWeight:500,marginBottom:5,textTransform:'uppercase',letterSpacing:'0.05em'}}>{label}</label>
+    {children}
+  </div>;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  REST TIMER
+// ═══════════════════════════════════════════════════════════════
+function RestTimer({seconds,onClose}){
+  const [rem,setRem]=useState(seconds);
+  const [paused,setPaused]=useState(false);
+  const ref=useRef();
+  const r=60, circ=2*Math.PI*r, prog=circ*(1-rem/seconds);
+  useEffect(()=>{ if(paused||rem<=0) return; ref.current=setInterval(()=>setRem(x=>x>0?x-1:0),1000); return()=>clearInterval(ref.current); },[paused,rem]);
+  useEffect(()=>{ if(rem===0){ clearInterval(ref.current); try{ const c=new(window.AudioContext||window.webkitAudioContext)();const o=c.createOscillator();const g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.setValueAtTime(880,c.currentTime);g.gain.setValueAtTime(.3,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+.8);o.start(c.currentTime);o.stop(c.currentTime+.8); }catch{} } },[rem]);
+  const mm=String(Math.floor(rem/60)).padStart(2,'0'), ss=String(rem%60).padStart(2,'0');
+  return <div className="modal-overlay fade-in">
+    <div style={{background:'#111827',border:'1px solid #1f2937',borderRadius:20,padding:36,textAlign:'center',width:280,animation:'slideUp .25s ease'}}>
+      <p style={{color:'#9ca3af',fontSize:11,fontWeight:500,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:20}}>Recupero</p>
+      <div style={{position:'relative',display:'inline-block',marginBottom:24}}>
+        <svg width="150" height="150" viewBox="0 0 150 150">
+          <circle cx="75" cy="75" r={r} fill="none" stroke="#1f2937" strokeWidth="7"/>
+          <circle cx="75" cy="75" r={r} fill="none" stroke={rem===0?'#22c55e':'#3b82f6'} strokeWidth="7" strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={circ-prog} style={{transform:'rotate(-90deg)',transformOrigin:'75px 75px',transition:'stroke-dashoffset 1s linear,stroke .3s'}}/>
+        </svg>
+        <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',textAlign:'center'}}>
+          <div style={{fontFamily:'Barlow Condensed',fontSize:44,fontWeight:700,color:rem===0?'#22c55e':'#f1f5f9',lineHeight:1}}>{rem===0?'✓':`${mm}:${ss}`}</div>
+          {rem>0&&<div style={{color:'#6b7280',fontSize:12,marginTop:3}}>{Math.round(((seconds-rem)/seconds)*100)}%</div>}
+        </div>
+      </div>
+      {rem===0&&<p style={{color:'#4ade80',fontSize:14,fontWeight:500,marginBottom:16}}>Recupero completato!</p>}
+      <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+        {rem>0&&<button className="btn btn-ghost btn-sm" onClick={()=>setPaused(p=>!p)}>{paused?'▶ Riprendi':'⏸ Pausa'}</button>}
+        <button className="btn btn-primary btn-sm" onClick={onClose}>Chiudi</button>
+      </div>
+    </div>
+  </div>;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EXERCISE EDIT MODAL
+//  Opens when user taps/clicks an exercise in edit mode
+// ═══════════════════════════════════════════════════════════════
+function ExerciseEditModal({a,mgs,onSave,onClose}){
+  const [f,setF]=useState({
+    exerciseName:a.exerciseName||'',
+    mgId:a.mgId||1,
+    sets:a.sets||3,
+    reps:a.reps||'',
+    weight:a.weight||'',
+    prevWeight:a.prevWeight||'',
+    rest:a.rest??60,
+    notes:a.notes||'',
+    completed:a.completed||false,
+  });
+  const [showHist,setShowHist]=useState(false);
+  const set=(k,v)=>setF(p=>({...p,[k]:v}));
+
+  function save(){
+    if(!f.exerciseName.trim()){ alert('Inserisci il nome esercizio'); return; }
+    let hist=[...(a.weightHistory||[])];
+    if(f.weight && f.weight!==a.weight) hist=[...hist,{date:today(),weight:f.weight}];
+    onSave({...a,...f,sets:Number(f.sets)||1,rest:Number(f.rest)||0,mgId:Number(f.mgId),weightHistory:hist});
+  }
+
+  return <Modal title="Modifica Esercizio" onClose={onClose} wide>
+    <FF label="Nome Esercizio">
+      <input value={f.exerciseName} onChange={e=>set('exerciseName',e.target.value)} placeholder="es. Squat con Bilanciere" autoFocus/>
+    </FF>
+    <FF label="Gruppo Muscolare">
+      <select value={f.mgId} onChange={e=>set('mgId',e.target.value)}>
+        {mgs.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}
+      </select>
+    </FF>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}>
+      <FF label="Serie"><input type="number" min="1" value={f.sets} onChange={e=>set('sets',e.target.value)} placeholder="3"/></FF>
+      <FF label="Ripetizioni"><input value={f.reps} onChange={e=>set('reps',e.target.value)} placeholder="es. 10 o 8/gamba"/></FF>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}>
+      <FF label="Peso Attuale"><input value={f.weight} onChange={e=>set('weight',e.target.value)} placeholder="es. 40 kg"/></FF>
+      <FF label="Peso Precedente"><input value={f.prevWeight} onChange={e=>set('prevWeight',e.target.value)} placeholder="es. 35 kg"/></FF>
+    </div>
+    <FF label="Recupero (secondi)"><input type="number" min="0" value={f.rest} onChange={e=>set('rest',e.target.value)} placeholder="60"/></FF>
+    <FF label="Note"><textarea value={f.notes} onChange={e=>set('notes',e.target.value)} placeholder="Tecnica, avvertenze..." rows={2} style={{resize:'vertical'}}/></FF>
+    {/* Completed checkbox */}
+    <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:'#1f2937',borderRadius:8,cursor:'pointer',marginBottom:14,userSelect:'none'}} onClick={()=>set('completed',!f.completed)}>
+      <div style={{width:20,height:20,borderRadius:4,border:`2px solid ${f.completed?'#22c55e':'#374151'}`,background:f.completed?'#22c55e':'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all .2s'}}>
+        {f.completed&&<svg width="11" height="11" fill="none" stroke="white" strokeWidth="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>}
+      </div>
+      <span style={{fontSize:14}}>Segna come completato</span>
+    </div>
+    {/* Weight history */}
+    {(a.weightHistory||[]).length>0&&<>
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8,cursor:'pointer',color:'#9ca3af',fontSize:13,userSelect:'none'}} onClick={()=>setShowHist(h=>!h)}>
+        <Ico d={IC.history} s={14}/> Cronologia pesi ({a.weightHistory.length}) <span style={{marginLeft:'auto'}}>{showHist?'▲':'▼'}</span>
+      </div>
+      {showHist&&<div style={{background:'#0f172a',borderRadius:8,padding:'8px 12px',marginBottom:14}}>
+        {[...a.weightHistory].reverse().map((h,i)=>(
+          <div key={i} style={{display:'flex',justifyContent:'space-between',padding:'4px 0',borderBottom:i<a.weightHistory.length-1?'1px solid #1f2937':'none',fontSize:13}}>
+            <span style={{color:'#6b7280'}}>{h.date}</span>
+            <span style={{color:'#f1f5f9',fontWeight:500}}>{h.weight}</span>
+          </div>
+        ))}
+      </div>}
+    </>}
+    <div style={{display:'flex',gap:10}}>
+      <button className="btn btn-ghost" style={{flex:1}} onClick={onClose}>Annulla</button>
+      <button className="btn btn-primary" style={{flex:1}} onClick={save}>Salva</button>
+    </div>
+  </Modal>;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ADD EXERCISE MODAL
+// ═══════════════════════════════════════════════════════════════
+function AddExModal({mgs,onSave,onClose}){
+  const [f,setF]=useState({exerciseName:'',mgId:1,sets:3,reps:'',weight:'',rest:60,notes:''});
+  const set=(k,v)=>setF(p=>({...p,[k]:v}));
+  function save(){
+    if(!f.exerciseName.trim()){ alert('Inserisci il nome'); return; }
+    onSave({...f,sets:Number(f.sets)||1,rest:Number(f.rest)||0,mgId:Number(f.mgId),prevWeight:'',completed:false,weightHistory:[]});
+  }
+  return <Modal title="Aggiungi Esercizio" onClose={onClose} wide>
+    <FF label="Nome Esercizio"><input value={f.exerciseName} onChange={e=>set('exerciseName',e.target.value)} placeholder="es. Panca Piana" autoFocus onKeyDown={e=>e.key==='Enter'&&save()}/></FF>
+    <FF label="Gruppo Muscolare"><select value={f.mgId} onChange={e=>set('mgId',e.target.value)}>{mgs.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}</select></FF>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}>
+      <FF label="Serie"><input type="number" min="1" value={f.sets} onChange={e=>set('sets',e.target.value)}/></FF>
+      <FF label="Ripetizioni"><input value={f.reps} onChange={e=>set('reps',e.target.value)} placeholder="10"/></FF>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0 12px'}}>
+      <FF label="Peso"><input value={f.weight} onChange={e=>set('weight',e.target.value)} placeholder="es. 40 kg"/></FF>
+      <FF label="Recupero (sec)"><input type="number" min="0" value={f.rest} onChange={e=>set('rest',e.target.value)}/></FF>
+    </div>
+    <FF label="Note"><textarea value={f.notes} onChange={e=>set('notes',e.target.value)} placeholder="Note..." rows={2} style={{resize:'vertical'}}/></FF>
+    <div style={{display:'flex',gap:10}}>
+      <button className="btn btn-ghost" style={{flex:1}} onClick={onClose}>Annulla</button>
+      <button className="btn btn-success" style={{flex:1}} onClick={save}><Ico d={IC.plus} s={15}/>Aggiungi</button>
+    </div>
+  </Modal>;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DAY NAME MODAL
+// ═══════════════════════════════════════════════════════════════
+function DayModal({day,onSave,onClose}){
+  const [label,setLabel]=useState(day?day.label:'Nuovo Giorno');
+  return <Modal title={day?'Rinomina Giorno':'Aggiungi Giorno'} onClose={onClose}>
+    <FF label="Nome Giorno">
+      <input value={label} onChange={e=>setLabel(e.target.value)} autoFocus placeholder="es. Push A, Leg Day..." onKeyDown={e=>e.key==='Enter'&&onSave(label.trim()||'Nuovo Giorno')}/>
+    </FF>
+    <div style={{display:'flex',gap:10}}>
+      <button className="btn btn-ghost" style={{flex:1}} onClick={onClose}>Annulla</button>
+      <button className="btn btn-primary" style={{flex:1}} onClick={()=>onSave(label.trim()||'Nuovo Giorno')}>Salva</button>
+    </div>
+  </Modal>;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PLAN EDITOR — full editable day/exercise manager
+// ═══════════════════════════════════════════════════════════════
+function PlanEditor({plan,data,setData,showToast,onBack}){
+  const [selDayId,setSelDayId]=useState(null);
+  const [dayModal,setDayModal]=useState(null); // null | 'add' | dayObj
+  const [addExModal,setAddExModal]=useState(false);
+  const [editExModal,setEditExModal]=useState(null); // assignment
+  const [editName,setEditName]=useState(false);
+  const [planName,setPlanName]=useState(plan.name);
+  const dragSrc=useRef(null);
+
+  // Sorted days for this plan
+  const days=useMemo(()=>(data.days[plan.id]||[]).slice().sort((a,b)=>a.order-b.order),[data.days,plan.id]);
+
+  // Auto-select first day
+  useEffect(()=>{ if(!selDayId&&days.length>0) setSelDayId(days[0].id); },[days]);
+
+  const selDay=days.find(d=>d.id===selDayId);
+
+  const dayEx=useMemo(()=>
+    data.assignments.filter(a=>a.dayId===selDayId).slice().sort((a,b)=>a.order-b.order),
+    [data.assignments,selDayId]
+  );
+
+  const doneCount=dayEx.filter(a=>a.completed).length;
+  const pct=dayEx.length>0?Math.round((doneCount/dayEx.length)*100):0;
+
+  // ── helpers to update data immutably ──
+  function updData(next){ setData(next); }
+
+  // ── plan name ──
+  function savePlanName(){
+    updData({...data,plans:data.plans.map(p=>p.id===plan.id?{...p,name:planName.trim()||plan.name}:p)});
+    setEditName(false); showToast('Nome scheda aggiornato!');
+  }
+
+  // ── day ops ──
+  function addDay(label){
+    const d={id:uid(),planId:plan.id,label,order:days.length};
+    const next={...data,days:{...data.days,[plan.id]:[...(data.days[plan.id]||[]),d]}};
+    updData(next); setDayModal(null); setSelDayId(d.id); showToast('Giorno aggiunto!');
+  }
+  function renameDay(label){
+    const next={...data,days:{...data.days,[plan.id]:(data.days[plan.id]||[]).map(d=>d.id===dayModal.id?{...d,label}:d)}};
+    updData(next); setDayModal(null); showToast('Giorno rinominato!');
+  }
+  function deleteDay(id){
+    if(!confirm('Eliminare questo giorno e tutti i suoi esercizi?')) return;
+    const next={...data,
+      days:{...data.days,[plan.id]:(data.days[plan.id]||[]).filter(d=>d.id!==id)},
+      assignments:data.assignments.filter(a=>a.dayId!==id)
+    };
+    updData(next);
+    if(selDayId===id) setSelDayId(null);
+    showToast('Giorno eliminato','error');
+  }
+  function moveDayOrder(id,dir){
+    const sorted=[...days];
+    const i=sorted.findIndex(d=>d.id===id);
+    const j=i+dir;
+    if(j<0||j>=sorted.length) return;
+    const newD=sorted.map((d,k)=>{
+      if(k===i) return {...d,order:sorted[j].order};
+      if(k===j) return {...d,order:sorted[i].order};
+      return d;
+    });
+    updData({...data,days:{...data.days,[plan.id]:newD}});
+  }
+
+  // ── exercise ops ──
+  function addEx(exData){
+    const a={id:uid(),dayId:selDayId,planId:plan.id,order:dayEx.length,...exData};
+    updData({...data,assignments:[...data.assignments,a]});
+    setAddExModal(false); showToast('Esercizio aggiunto!');
+  }
+  function saveEx(updated){
+    updData({...data,assignments:data.assignments.map(a=>a.id===updated.id?updated:a)});
+    setEditExModal(null); showToast('Esercizio salvato!');
+  }
+  function delEx(id){
+    if(!confirm('Eliminare questo esercizio?')) return;
+    updData({...data,assignments:data.assignments.filter(a=>a.id!==id)});
+    showToast('Eliminato','error');
+  }
+  function dupEx(a){
+    const n={...a,id:uid(),order:dayEx.length,completed:false};
+    updData({...data,assignments:[...data.assignments,n]});
+    showToast('Duplicato!');
+  }
+  function moveEx(id,dir){
+    const sorted=[...dayEx];
+    const i=sorted.findIndex(a=>a.id===id);
+    const j=i+dir;
+    if(j<0||j>=sorted.length) return;
+    const newA=data.assignments.map(a=>{
+      if(a.id===sorted[i].id) return {...a,order:sorted[j].order};
+      if(a.id===sorted[j].id) return {...a,order:sorted[i].order};
+      return a;
+    });
+    updData({...data,assignments:newA});
+  }
+  function toggleEx(id){
+    updData({...data,assignments:data.assignments.map(a=>a.id===id?{...a,completed:!a.completed}:a)});
+  }
+  function resetDay(){
+    if(!confirm('Resettare tutti gli esercizi del giorno?')) return;
+    updData({...data,assignments:data.assignments.map(a=>a.dayId===selDayId?{...a,completed:false}:a)});
+    showToast('Giornata resettata!','info');
+  }
+
+  // ── drag and drop ──
+  function onDragStart(e,id){ dragSrc.current=id; e.currentTarget.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; }
+  function onDragEnd(e){ e.currentTarget.classList.remove('dragging'); }
+  function onDragOver(e,id){ e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+  function onDragLeave(e){ e.currentTarget.classList.remove('drag-over'); }
+  function onDrop(e,tgtId){
+    e.currentTarget.classList.remove('drag-over');
+    const srcId=dragSrc.current;
+    if(!srcId||srcId===tgtId) return;
+    const sorted=[...dayEx];
+    const si=sorted.findIndex(a=>a.id===srcId);
+    const ti=sorted.findIndex(a=>a.id===tgtId);
+    const reordered=[...sorted];
+    const [moved]=reordered.splice(si,1);
+    reordered.splice(ti,0,moved);
+    const newA=data.assignments.map(a=>{ const ni=reordered.findIndex(r=>r.id===a.id); return ni>=0?{...a,order:ni}:a; });
+    updData({...data,assignments:newA});
+    dragSrc.current=null;
+  }
+
+  return <div className="slide-up">
+    {/* ── Header ── */}
+    <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24,flexWrap:'wrap'}}>
+      <button className="btn btn-ghost btn-sm" onClick={onBack}>← Schede</button>
+      {editName
+        ? <div style={{display:'flex',gap:8,flex:1,alignItems:'center'}}>
+            <input value={planName} onChange={e=>setPlanName(e.target.value)} style={{fontFamily:'Barlow Condensed',fontSize:22,fontWeight:700,maxWidth:260}} onKeyDown={e=>e.key==='Enter'&&savePlanName()}/>
+            <button className="btn btn-primary btn-sm" onClick={savePlanName}>Salva</button>
+            <button className="btn btn-ghost btn-sm" onClick={()=>{setEditName(false);setPlanName(plan.name);}}>✕</button>
+          </div>
+        : <h2 style={{fontFamily:'Barlow Condensed',fontSize:30,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:8}} onClick={()=>setEditName(true)}>
+            {plan.name} <Ico d={IC.edit} s={15} c="#6b7280"/>
+          </h2>
+      }
+    </div>
+
+    <div style={{display:'grid',gridTemplateColumns:'200px 1fr',gap:18,alignItems:'start'}}>
+
+      {/* ── Day sidebar ── */}
+      <div>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
+          <span style={{color:'#6b7280',fontSize:11,fontWeight:500,textTransform:'uppercase',letterSpacing:'.06em'}}>Giorni</span>
+          <button className="btn-icon" style={{padding:5}} onClick={()=>setDayModal('add')} title="Aggiungi giorno"><Ico d={IC.plus} s={13}/></button>
+        </div>
+        {days.length===0&&<p style={{color:'#6b7280',fontSize:13,padding:'10px 0'}}>Nessun giorno</p>}
+        {days.map((d,i)=>(
+          <div key={d.id} style={{display:'flex',gap:4,alignItems:'center',marginBottom:5}}>
+            <div className={`day-pill ${selDayId===d.id?'active':''}`} style={{flex:1}} onClick={()=>setSelDayId(d.id)}>
+              <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{d.label}</span>
+            </div>
+            {/* day actions */}
+            <div style={{display:'flex',flexDirection:'column',gap:2}}>
+              <button className="btn-icon" style={{padding:3,width:20,height:20}} onClick={()=>setDayModal(d)} title="Rinomina"><Ico d={IC.edit} s={10}/></button>
+              <button className="btn-icon" style={{padding:3,width:20,height:20,color:'#ef4444',borderColor:'#7f1d1d'}} onClick={()=>deleteDay(d.id)} title="Elimina"><Ico d={IC.trash} s={10}/></button>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:2}}>
+              <button className="btn-icon" style={{padding:3,width:20,height:20}} onClick={()=>moveDayOrder(d.id,-1)} disabled={i===0}><Ico d={IC.up} s={10}/></button>
+              <button className="btn-icon" style={{padding:3,width:20,height:20}} onClick={()=>moveDayOrder(d.id,1)} disabled={i===days.length-1}><Ico d={IC.down} s={10}/></button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Exercise panel ── */}
+      <div>
+        {!selDay
+          ? <div style={{textAlign:'center',padding:48,color:'#6b7280'}}>
+              <div style={{fontSize:36,marginBottom:8}}>📅</div>
+              <p>Seleziona o crea un giorno</p>
+            </div>
+          : <>
+            {/* Day header */}
+            <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12,flexWrap:'wrap',gap:10}}>
+              <div>
+                <h3 style={{fontFamily:'Barlow Condensed',fontSize:22,fontWeight:700}}>{selDay.label}</h3>
+                <span style={{color:'#6b7280',fontSize:13}}>{dayEx.length} esercizi · {doneCount} completati</span>
+              </div>
+              <div style={{display:'flex',gap:8}}>
+                <button className="btn btn-ghost btn-sm" onClick={resetDay}><Ico d={IC.reset} s={13}/>Reset</button>
+                <button className="btn btn-primary btn-sm" onClick={()=>setAddExModal(true)}><Ico d={IC.plus} s={13}/>Aggiungi</button>
+              </div>
+            </div>
+            {/* Progress bar */}
+            {dayEx.length>0&&<div style={{marginBottom:14}}>
+              <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#9ca3af',marginBottom:5}}>
+                <span>Progresso</span><span style={{color:pct===100?'#22c55e':'#3b82f6',fontWeight:500}}>{pct}%</span>
+              </div>
+              <div style={{background:'#1f2937',borderRadius:8,height:5,overflow:'hidden'}}>
+                <div style={{width:`${pct}%`,height:'100%',background:pct===100?'#22c55e':'#3b82f6',borderRadius:8,transition:'width .4s ease'}}/>
+              </div>
+            </div>}
+            {/* Exercise list */}
+            {dayEx.length===0
+              ? <div style={{textAlign:'center',padding:40,color:'#6b7280',background:'#111827',borderRadius:12,border:'1px dashed #1f2937'}}>
+                  Nessun esercizio.
+                  <br/><button className="btn btn-primary btn-sm" style={{marginTop:12}} onClick={()=>setAddExModal(true)}><Ico d={IC.plus} s={13}/>Aggiungi</button>
+                </div>
+              : <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                  {dayEx.map((a,i)=>{
+                    const mg=data.muscleGroups.find(g=>g.id===a.mgId);
+                    return <div key={a.id}
+                      className={`ex-card ${a.completed?'done':''}`}
+                      draggable
+                      onDragStart={e=>onDragStart(e,a.id)}
+                      onDragEnd={onDragEnd}
+                      onDragOver={e=>onDragOver(e,a.id)}
+                      onDragLeave={onDragLeave}
+                      onDrop={e=>onDrop(e,a.id)}>
+                      <div style={{display:'flex',alignItems:'flex-start',gap:10}}>
+                        {/* Drag handle */}
+                        <div className="drag-handle" title="Trascina per riordinare"><Ico d={IC.grip} s={15}/></div>
+                        {/* Done toggle */}
+                        <div style={{width:22,height:22,borderRadius:'50%',border:`2px solid ${a.completed?'#22c55e':'#374151'}`,background:a.completed?'#22c55e':'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,cursor:'pointer',transition:'all .2s',marginTop:1}} onClick={()=>toggleEx(a.id)}>
+                          {a.completed&&<svg width="11" height="11" fill="none" stroke="white" strokeWidth="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>}
+                        </div>
+                        {/* Main content */}
+                        <div style={{flex:1,minWidth:0}}>
+                          <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:5,flexWrap:'wrap'}}>
+                            {mg&&<span className={`badge ${MG_COLORS[mg.id]||'badge-blue'}`} style={{fontSize:10}}>{mg.name}</span>}
+                            <span style={{color:a.completed?'#4ade80':'#f1f5f9',fontWeight:600,fontSize:14,textDecoration:a.completed?'line-through':'none'}}>{a.exerciseName}</span>
+                          </div>
+                          <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
+                            {a.sets!=null&&<div style={{textAlign:'center'}}><div style={{fontFamily:'Barlow Condensed',fontSize:20,fontWeight:700,lineHeight:1}}>{a.sets}</div><div style={{color:'#6b7280',fontSize:10,textTransform:'uppercase'}}>Serie</div></div>}
+                            {a.reps&&<div style={{textAlign:'center'}}><div style={{fontFamily:'Barlow Condensed',fontSize:20,fontWeight:700,lineHeight:1}}>{a.reps}</div><div style={{color:'#6b7280',fontSize:10,textTransform:'uppercase'}}>Rip.</div></div>}
+                            {a.weight&&<div style={{textAlign:'center'}}><div style={{fontFamily:'Barlow Condensed',fontSize:20,fontWeight:700,color:'#3b82f6',lineHeight:1}}>{a.weight}</div><div style={{color:'#6b7280',fontSize:10,textTransform:'uppercase'}}>Peso</div></div>}
+                            {a.prevWeight&&<div style={{textAlign:'center'}}><div style={{fontFamily:'Barlow Condensed',fontSize:20,fontWeight:700,color:'#6b7280',lineHeight:1}}>{a.prevWeight}</div><div style={{color:'#6b7280',fontSize:10,textTransform:'uppercase'}}>Prec.</div></div>}
+                            {a.rest>0&&<div style={{textAlign:'center'}}><div style={{fontFamily:'Barlow Condensed',fontSize:20,fontWeight:700,color:'#f59e0b',lineHeight:1}}>{a.rest}s</div><div style={{color:'#6b7280',fontSize:10,textTransform:'uppercase'}}>Rec.</div></div>}
+                          </div>
+                          {a.notes&&<div style={{color:'#6b7280',fontSize:12,fontStyle:'italic',marginTop:5}}>💡 {a.notes}</div>}
+                        </div>
+                        {/* Action buttons */}
+                        <div style={{display:'flex',flexDirection:'column',gap:3,flexShrink:0}}>
+                          <button className="btn-icon" style={{padding:5}} onClick={()=>setEditExModal(a)} title="Modifica"><Ico d={IC.edit} s={12}/></button>
+                          <button className="btn-icon" style={{padding:5}} onClick={()=>dupEx(a)} title="Duplica"><Ico d={IC.copy} s={12}/></button>
+                          <button className="btn-icon" style={{padding:5}} onClick={()=>moveEx(a.id,-1)} disabled={i===0} title="Su"><Ico d={IC.up} s={12}/></button>
+                          <button className="btn-icon" style={{padding:5}} onClick={()=>moveEx(a.id,1)} disabled={i===dayEx.length-1} title="Giù"><Ico d={IC.down} s={12}/></button>
+                          <button className="btn-icon" style={{padding:5,color:'#ef4444',borderColor:'#7f1d1d'}} onClick={()=>delEx(a.id)} title="Elimina"><Ico d={IC.trash} s={12}/></button>
+                        </div>
+                      </div>
+                    </div>;
+                  })}
+                </div>
+            }
+          </>
+        }
+      </div>
+    </div>
+
+    {/* ── Modals ── */}
+    {dayModal==='add'&&<DayModal day={null} onSave={addDay} onClose={()=>setDayModal(null)}/>}
+    {dayModal&&dayModal!=='add'&&<DayModal day={dayModal} onSave={renameDay} onClose={()=>setDayModal(null)}/>}
+    {addExModal&&<AddExModal mgs={data.muscleGroups} onSave={addEx} onClose={()=>setAddExModal(false)}/>}
+    {editExModal&&<ExerciseEditModal a={editExModal} mgs={data.muscleGroups} onSave={saveEx} onClose={()=>setEditExModal(null)}/>}
+  </div>;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  PLANS OVERVIEW — list of plans with add/edit/delete
+// ═══════════════════════════════════════════════════════════════
+function PlansOverview({data,setData,showToast,onEdit}){
+  const [form,setForm]=useState({name:'',notes:''});
+  const [modal,setModal]=useState(null); // null | 'add' | planObj
+  const set=(k,v)=>setForm(p=>({...p,[k]:v}));
+
+  function openAdd(){ setForm({name:'',notes:''}); setModal('add'); }
+  function openEdit(p){ setForm({name:p.name,notes:p.notes||''}); setModal(p); }
+
+  function save(){
+    if(!form.name.trim()){ showToast('Nome obbligatorio','error'); return; }
+    if(modal==='add'){
+      const np={id:Date.now(),name:form.name.trim(),notes:form.notes.trim()};
+      setData({...data,plans:[...data.plans,np],days:{...data.days,[np.id]:[]}});
+      showToast('Scheda creata!');
+    } else {
+      setData({...data,plans:data.plans.map(p=>p.id===modal.id?{...p,...form}:p)});
+      showToast('Scheda aggiornata!');
+    }
+    setModal(null);
+  }
+
+  function del(planId){
+    if(!confirm('Eliminare questa scheda e tutti i giorni/esercizi?')) return;
+    const dIds=(data.days[planId]||[]).map(d=>d.id);
+    const nd={...data.days}; delete nd[planId];
+    setData({...data,plans:data.plans.filter(p=>p.id!==planId),days:nd,assignments:data.assignments.filter(a=>!dIds.includes(a.dayId))});
+    showToast('Scheda eliminata','error');
+  }
+
+  const PF=()=><>
+    <FF label="Nome Scheda"><input value={form.name} onChange={e=>set('name',e.target.value)} placeholder="es. Push Day" autoFocus onKeyDown={e=>e.key==='Enter'&&save()}/></FF>
+    <FF label="Note"><textarea value={form.notes} onChange={e=>set('notes',e.target.value)} placeholder="Descrizione..." rows={2} style={{resize:'vertical'}}/></FF>
+    <div style={{display:'flex',gap:10}}>
+      <button className="btn btn-ghost" style={{flex:1}} onClick={()=>setModal(null)}>Annulla</button>
+      <button className="btn btn-primary" style={{flex:1}} onClick={save}>Salva</button>
+    </div>
+  </>;
+
+  return <div className="slide-up">
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:24,flexWrap:'wrap',gap:12}}>
+      <h2 style={{fontFamily:'Barlow Condensed',fontSize:32,fontWeight:700}}>Le Mie Schede</h2>
+      <button className="btn btn-primary" onClick={openAdd}><Ico d={IC.plus} s={15}/>Nuova Scheda</button>
+    </div>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:16}}>
+      {data.plans.map(plan=>{
+        const pDays=(data.days[plan.id]||[]).sort((a,b)=>a.order-b.order);
+        const total=data.assignments.filter(a=>a.planId===plan.id).length;
+        const done=data.assignments.filter(a=>a.planId===plan.id&&a.completed).length;
+        return <div key={plan.id} className="card">
+          <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:12}}>
+            <div style={{flex:1}}>
+              <div style={{fontFamily:'Barlow Condensed',fontSize:22,fontWeight:700,marginBottom:3}}>{plan.name}</div>
+              {plan.notes&&<div style={{color:'#9ca3af',fontSize:13}}>{plan.notes}</div>}
+            </div>
+            <div style={{display:'flex',gap:5,flexShrink:0,marginLeft:8}}>
+              <button className="btn-icon" onClick={()=>openEdit(plan)}><Ico d={IC.edit} s={13}/></button>
+              <button className="btn-icon" style={{color:'#ef4444',borderColor:'#7f1d1d'}} onClick={()=>del(plan.id)}><Ico d={IC.trash} s={13}/></button>
+            </div>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,marginBottom:14}}>
+            {[{l:'Giorni',v:pDays.length},{l:'Esercizi',v:total},{l:'Completati',v:done,c:done>0?'#22c55e':undefined}].map(s=>(
+              <div key={s.l} style={{background:'#1f2937',borderRadius:8,padding:'8px 10px',textAlign:'center'}}>
+                <div style={{fontFamily:'Barlow Condensed',fontSize:22,fontWeight:700,color:s.c||'#f1f5f9'}}>{s.v}</div>
+                <div style={{color:'#6b7280',fontSize:10}}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+          {pDays.length>0&&<div style={{display:'flex',gap:5,flexWrap:'wrap',marginBottom:14}}>
+            {pDays.map(d=><span key={d.id} className="badge badge-blue" style={{fontSize:11}}>{d.label}</span>)}
+          </div>}
+          <button className="btn btn-ghost" style={{width:'100%',justifyContent:'center'}} onClick={()=>onEdit(plan)}>
+            <Ico d={IC.edit} s={13}/>Gestisci Esercizi →
+          </button>
+        </div>;
+      })}
+      {data.plans.length===0&&<div style={{textAlign:'center',padding:60,color:'#6b7280',gridColumn:'1/-1'}}>
+        <div style={{fontSize:48,marginBottom:12}}>🏋️</div>
+        <p>Nessuna scheda. Creane una!</p>
+      </div>}
+    </div>
+    {modal==='add'&&<Modal title="Nuova Scheda" onClose={()=>setModal(null)}><PF/></Modal>}
+    {modal&&modal!=='add'&&<Modal title="Modifica Scheda" onClose={()=>setModal(null)}><PF/></Modal>}
+  </div>;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  WORKOUT SESSION — active training (read + complete + timer)
+// ═══════════════════════════════════════════════════════════════
+function WorkoutSession({plan,day,data,setData,showToast,onBack}){
+  const [timer,setTimer]=useState(null);
+  const exs=data.assignments.filter(a=>a.dayId===day.id).sort((a,b)=>a.order-b.order);
+  const done=exs.filter(a=>a.completed).length;
+  const pct=exs.length>0?Math.round((done/exs.length)*100):0;
+
+  function toggle(id){ setData({...data,assignments:data.assignments.map(a=>a.id===id?{...a,completed:!a.completed}:a)}); }
+
+  function finish(){
+    const next={...data,completed:[...data.completed,{id:Date.now(),planId:plan.id,dayId:day.id,dayLabel:day.label,date:new Date().toISOString(),exerciseCount:exs.length,completedCount:done}]};
+    setData(next); showToast(`💪 Allenamento completato! ${done}/${exs.length}`); onBack();
+  }
+
+  return <div className="slide-up" style={{maxWidth:660,margin:'0 auto'}}>
+    <button className="btn btn-ghost btn-sm" style={{marginBottom:14}} onClick={onBack}>← Indietro</button>
+    <div style={{marginBottom:18}}>
+      <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',flexWrap:'wrap',gap:12}}>
+        <div>
+          <h2 style={{fontFamily:'Barlow Condensed',fontSize:34,fontWeight:800,marginBottom:3}}>{day.label}</h2>
+          <p style={{color:'#9ca3af',fontSize:13}}>{plan.name}</p>
+        </div>
+        <div style={{textAlign:'right'}}>
+          <div style={{fontFamily:'Barlow Condensed',fontSize:38,fontWeight:800,color:pct===100?'#22c55e':'#3b82f6',lineHeight:1}}>{pct}%</div>
+          <div style={{color:'#6b7280',fontSize:12}}>{done}/{exs.length}</div>
+        </div>
+      </div>
+      <div style={{background:'#1f2937',borderRadius:8,height:5,marginTop:14,overflow:'hidden'}}>
+        <div style={{width:`${pct}%`,height:'100%',background:pct===100?'#22c55e':'#3b82f6',borderRadius:8,transition:'width .4s ease'}}/>
+      </div>
+    </div>
+    <div style={{display:'flex',flexDirection:'column',gap:10,marginBottom:20}}>
+      {exs.map(a=>{
+        const mg=data.muscleGroups.find(g=>g.id===a.mgId);
+        return <div key={a.id} className={`ex-card ${a.completed?'done':''}`} style={{cursor:'pointer'}} onClick={()=>toggle(a.id)}>
+          <div style={{display:'flex',alignItems:'flex-start',gap:12}}>
+            <div style={{width:24,height:24,borderRadius:'50%',border:`2px solid ${a.completed?'#22c55e':'#374151'}`,background:a.completed?'#22c55e':'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,transition:'all .2s',marginTop:1}}>
+              {a.completed&&<svg width="11" height="11" fill="none" stroke="white" strokeWidth="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>}
+            </div>
+            <div style={{flex:1}}>
+              <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:5,flexWrap:'wrap'}}>
+                {mg&&<span className={`badge ${MG_COLORS[mg.id]||'badge-blue'}`} style={{fontSize:10}}>{mg.name}</span>}
+                <span style={{color:a.completed?'#4ade80':'#f1f5f9',fontWeight:600,fontSize:15,textDecoration:a.completed?'line-through':'none'}}>{a.exerciseName}</span>
+              </div>
+              <div style={{display:'flex',gap:14,flexWrap:'wrap'}}>
+                {a.sets!=null&&<div style={{textAlign:'center'}}><div style={{fontFamily:'Barlow Condensed',fontSize:26,fontWeight:700,lineHeight:1}}>{a.sets}</div><div style={{color:'#6b7280',fontSize:10,textTransform:'uppercase'}}>Serie</div></div>}
+                {a.reps&&<div style={{textAlign:'center'}}><div style={{fontFamily:'Barlow Condensed',fontSize:26,fontWeight:700,lineHeight:1}}>{a.reps}</div><div style={{color:'#6b7280',fontSize:10,textTransform:'uppercase'}}>Rip.</div></div>}
+                {a.weight&&<div style={{textAlign:'center'}}><div style={{fontFamily:'Barlow Condensed',fontSize:26,fontWeight:700,color:'#3b82f6',lineHeight:1}}>{a.weight}</div><div style={{color:'#6b7280',fontSize:10,textTransform:'uppercase'}}>Peso</div></div>}
+                {a.rest>0&&<div style={{textAlign:'center'}}><div style={{fontFamily:'Barlow Condensed',fontSize:26,fontWeight:700,color:'#f59e0b',lineHeight:1}}>{a.rest}s</div><div style={{color:'#6b7280',fontSize:10,textTransform:'uppercase'}}>Rec.</div></div>}
+              </div>
+              {a.notes&&<div style={{color:'#6b7280',fontSize:12,fontStyle:'italic',marginTop:6}}>💡 {a.notes}</div>}
+              {a.rest>0&&<button className="btn btn-ghost btn-sm" style={{marginTop:8,fontSize:12}} onClick={e=>{e.stopPropagation();setTimer(a.rest);}}>
+                <Ico d={IC.timer} s={13}/>Timer {a.rest}s
+              </button>}
+            </div>
+          </div>
+        </div>;
+      })}
+    </div>
+    {exs.length>0&&<button className={`btn ${pct===100?'btn-success':'btn-primary'}`} style={{width:'100%',justifyContent:'center',padding:14,fontSize:15}} onClick={finish}>
+      {pct===100?'🏆 Completa Allenamento!':'💪 Termina Sessione'}
+    </button>}
+    {timer&&<RestTimer seconds={timer} onClose={()=>setTimer(null)}/>}
+  </div>;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  HOME SECTION — pick a plan + day to train
+// ═══════════════════════════════════════════════════════════════
+function HomeSection({data,onStart}){
+  return <div className="slide-up">
+    <h2 style={{fontFamily:'Barlow Condensed',fontSize:32,fontWeight:800,marginBottom:5}}>Le Mie Schede</h2>
+    <p style={{color:'#6b7280',fontSize:14,marginBottom:20}}>Seleziona un giorno per iniziare l'allenamento</p>
+    {data.plans.length===0&&<div style={{textAlign:'center',padding:60,color:'#6b7280'}}>
+      <div style={{fontSize:48,marginBottom:12}}>🏋️</div>
+      <p>Nessuna scheda. Vai su "Schede" per crearne una!</p>
+    </div>}
+    {data.plans.map(plan=>{
+      const pDays=(data.days[plan.id]||[]).sort((a,b)=>a.order-b.order);
+      return <div key={plan.id} className="card" style={{marginBottom:16}}>
+        <div style={{marginBottom:14}}>
+          <h3 style={{fontFamily:'Barlow Condensed',fontSize:22,fontWeight:700,marginBottom:3}}>{plan.name}</h3>
+          {plan.notes&&<div style={{color:'#6b7280',fontSize:13}}>{plan.notes}</div>}
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:7}}>
+          {pDays.map(d=>{
+            const exs=data.assignments.filter(a=>a.dayId===d.id);
+            const doneEx=exs.filter(a=>a.completed).length;
+            const mgIds=[...new Set(exs.map(a=>a.mgId).filter(Boolean))];
+            return <div key={d.id}
+              style={{background:'#1f2937',borderRadius:10,padding:'12px 14px',cursor:'pointer',transition:'all .2s',border:'1px solid transparent'}}
+              onClick={()=>onStart(plan,d)}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor='#3b82f6';e.currentTarget.style.background='#1a2942'}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor='transparent';e.currentTarget.style.background='#1f2937'}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                <div>
+                  <div style={{fontFamily:'Barlow Condensed',fontSize:17,fontWeight:700,marginBottom:5}}>{d.label}</div>
+                  <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+                    {mgIds.slice(0,4).map(id=>{ const m=data.muscleGroups.find(g=>g.id===id); return m&&<span key={id} className={`badge ${MG_COLORS[id]||'badge-blue'}`} style={{fontSize:10}}>{m.name}</span>; })}
+                  </div>
+                </div>
+                <div style={{textAlign:'right',flexShrink:0}}>
+                  <div style={{fontFamily:'Barlow Condensed',fontSize:22,fontWeight:700,color:doneEx>0&&doneEx===exs.length?'#22c55e':'#3b82f6'}}>{exs.length}</div>
+                  <div style={{color:'#6b7280',fontSize:10}}>esercizi</div>
+                  {doneEx>0&&<div style={{color:'#4ade80',fontSize:10}}>{doneEx} ✓</div>}
+                </div>
+              </div>
+            </div>;
+          })}
+          {pDays.length===0&&<p style={{color:'#6b7280',fontSize:13,padding:'6px 0'}}>Nessun giorno configurato</p>}
+        </div>
+      </div>;
+    })}
+  </div>;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  HISTORY SECTION
+// ═══════════════════════════════════════════════════════════════
+function HistorySection({data}){
+  const list=[...data.completed].reverse();
+  return <div className="slide-up">
+    <h2 style={{fontFamily:'Barlow Condensed',fontSize:32,fontWeight:800,marginBottom:20}}>Storico Allenamenti</h2>
+    {list.length===0&&<div style={{textAlign:'center',padding:60,color:'#6b7280'}}>
+      <div style={{fontSize:48,marginBottom:12}}>📊</div>
+      <p>Nessuna sessione ancora. Inizia oggi!</p>
+    </div>}
+    {list.length>0&&<>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:20}}>
+        {[
+          {l:'Sessioni Totali',v:data.completed.length,c:'#3b82f6'},
+          {l:'Questa Settimana',v:data.completed.filter(c=>new Date(c.date)>new Date(Date.now()-7*864e5)).length,c:'#22c55e'},
+        ].map(s=>(
+          <div key={s.l} className="stat-card">
+            <div style={{color:'#6b7280',fontSize:13,marginBottom:4}}>{s.l}</div>
+            <div style={{fontFamily:'Barlow Condensed',fontSize:36,fontWeight:700,color:s.c}}>{s.v}</div>
+          </div>
+        ))}
+      </div>
+      {list.slice(0,30).map(c=>{ const plan=data.plans.find(p=>p.id===c.planId); const date=new Date(c.date);
+        return <div key={c.id} className="card" style={{marginBottom:10,padding:'12px 16px'}}>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <div style={{width:38,height:38,borderRadius:9,background:'rgba(34,197,94,.15)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Ico d={IC.check} s={18} c="#22c55e"/></div>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:500,fontSize:14}}>{plan?.name||'Scheda'} · {c.dayLabel||''}</div>
+              <div style={{color:'#6b7280',fontSize:12,marginTop:1}}>
+                {date.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})} · {c.completedCount}/{c.exerciseCount} esercizi
+              </div>
+            </div>
+            <span className="badge badge-green" style={{fontSize:11}}>✓</span>
+          </div>
+        </div>; })}
+    </>}
+  </div>;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  STATS SECTION — progress + weight history
+// ═══════════════════════════════════════════════════════════════
+function StatsSection({data}){
+  // weight history aggregated by exercise name
+  const byName={};
+  data.assignments.forEach(a=>(a.weightHistory||[]).forEach(h=>{
+    if(!byName[a.exerciseName]) byName[a.exerciseName]=[];
+    if(!byName[a.exerciseName].find(x=>x.date===h.date&&x.weight===h.weight)) byName[a.exerciseName].push(h);
+  }));
+  const names=Object.keys(byName);
+
+  const planStats=data.plans.map(p=>{
+    const total=data.assignments.filter(a=>a.planId===p.id).length;
+    const done=data.assignments.filter(a=>a.planId===p.id&&a.completed).length;
+    return {p,total,done,pct:total>0?Math.round((done/total)*100):0};
+  });
+
+  return <div className="slide-up">
+    <h2 style={{fontFamily:'Barlow Condensed',fontSize:32,fontWeight:800,marginBottom:20}}>Statistiche & Progressi</h2>
+    <div className="card" style={{marginBottom:20}}>
+      <h3 style={{fontFamily:'Barlow Condensed',fontSize:20,fontWeight:700,marginBottom:14}}>Completamento Schede</h3>
+      {planStats.map(({p,total,done,pct})=>(
+        <div key={p.id} style={{marginBottom:13}}>
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:5,fontSize:14}}>
+            <span style={{fontWeight:500}}>{p.name}</span>
+            <span style={{color:pct===100?'#22c55e':'#9ca3af'}}>{done}/{total} · {pct}%</span>
+          </div>
+          <div style={{background:'#1f2937',borderRadius:6,height:7,overflow:'hidden'}}>
+            <div style={{width:`${pct}%`,height:'100%',background:pct===100?'#22c55e':'#3b82f6',borderRadius:6,transition:'width .4s'}}/>
+          </div>
+        </div>
+      ))}
+    </div>
+    <div className="card">
+      <h3 style={{fontFamily:'Barlow Condensed',fontSize:20,fontWeight:700,marginBottom:14}}>Cronologia Pesi</h3>
+      {names.length===0&&<p style={{color:'#6b7280',fontSize:14}}>Nessun dato peso ancora. Modifica un esercizio e aggiorna il peso per iniziare!</p>}
+      {names.map(name=>{
+        const hist=[...byName[name]].sort((a,b)=>a.date.localeCompare(b.date));
+        const latest=hist[hist.length-1];
+        return <div key={name} style={{marginBottom:14,paddingBottom:14,borderBottom:'1px solid #1f2937'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:7}}>
+            <span style={{fontWeight:500,fontSize:14}}>{name}</span>
+            <span style={{fontFamily:'Barlow Condensed',fontSize:20,fontWeight:700,color:'#3b82f6'}}>{latest?.weight}</span>
+          </div>
+          <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>
+            {hist.map((h,i)=>(
+              <div key={i} style={{background:'#1f2937',borderRadius:5,padding:'3px 9px',fontSize:12}}>
+                <span style={{color:'#6b7280'}}>{h.date} </span>
+                <span style={{color:i===hist.length-1?'#4ade80':'#d1d5db',fontWeight:500}}>{h.weight}</span>
+              </div>
+            ))}
+          </div>
+          {hist.length>1&&<div style={{marginTop:5,fontSize:12,color:'#6b7280'}}>Da {hist[0].weight} → {latest.weight}</div>}
+        </div>;
+      })}
+    </div>
+  </div>;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  BACKUP SECTION — export/import JSON
+// ═══════════════════════════════════════════════════════════════
+function BackupSection({data,setData,showToast}){
+  const fileRef=useRef(null);
+  const size=(()=>{ try{ const s=localStorage.getItem(STORAGE_KEY)||''; return (s.length/1024).toFixed(1)+' KB'; }catch{ return 'N/A'; } })();
+
+  function exportJSON(){
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=`fittracker-backup-${today()}.json`; a.click();
+    URL.revokeObjectURL(url);
+    showToast('Backup esportato!');
+  }
+  function importJSON(e){
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=ev=>{ try{
+      const parsed=JSON.parse(ev.target.result);
+      if(!parsed.plans||!parsed.assignments){ showToast('File non valido','error'); return; }
+      if(!confirm('Importare? I dati attuali verranno sostituiti.')) return;
+      setData(parsed); showToast('Backup importato!');
+    }catch{ showToast('Errore nel file JSON','error'); } };
+    r.readAsText(f); e.target.value='';
+  }
+  function reset(){
+    if(!confirm('RESET COMPLETO: tutti i progressi verranno persi. Continuare?')) return;
+    setData(SEED); showToast('Dati resettati','info');
+  }
+
+  const boxes=[
+    {title:'Esporta JSON',desc:'Scarica schede, esercizi, pesi e storico in formato JSON.',col:'#22c55e',ic:IC.download,lbl:'Esporta',fn:exportJSON,cls:'btn-success'},
+    {title:'Importa JSON',desc:'Carica un file backup. I dati attuali verranno sostituiti.',col:'#3b82f6',ic:IC.upload,lbl:'Importa',fn:()=>fileRef.current?.click(),cls:'btn-primary'},
+    {title:'Reset Dati',desc:'Ripristina i dati iniziali. Tutti i progressi andranno persi.',col:'#ef4444',ic:IC.trash,lbl:'Reset',fn:reset,cls:'btn-danger'},
+  ];
+
+  return <div className="slide-up">
+    <h2 style={{fontFamily:'Barlow Condensed',fontSize:32,fontWeight:800,marginBottom:6}}>Backup & Importazione</h2>
+    <p style={{color:'#6b7280',fontSize:14,marginBottom:24}}>Esporta o importa i tuoi dati in formato JSON.</p>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:14,marginBottom:22}}>
+      {boxes.map(b=>(
+        <div key={b.title} className="card">
+          <div style={{width:42,height:42,borderRadius:9,background:`${b.col}22`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12}}><Ico d={b.ic} s={20} c={b.col}/></div>
+          <h3 style={{fontFamily:'Barlow Condensed',fontSize:19,fontWeight:700,marginBottom:5}}>{b.title}</h3>
+          <p style={{color:'#9ca3af',fontSize:13,marginBottom:18,lineHeight:1.5}}>{b.desc}</p>
+          <button className={`btn ${b.cls}`} style={{width:'100%',justifyContent:'center'}} onClick={b.fn}><Ico d={b.ic} s={14}/>{b.lbl}</button>
+        </div>
+      ))}
+    </div>
+    <div className="card">
+      <h3 style={{fontFamily:'Barlow Condensed',fontSize:19,fontWeight:700,marginBottom:12}}>Riepilogo Database</h3>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(110px,1fr))',gap:10}}>
+        {[
+          {l:'Schede',v:data.plans.length,c:'#8b5cf6'},
+          {l:'Giorni',v:Object.values(data.days||{}).flat().length,c:'#3b82f6'},
+          {l:'Esercizi',v:data.assignments.length,c:'#22c55e'},
+          {l:'Sessioni',v:data.completed.length,c:'#f59e0b'},
+          {l:'Spazio',v:size,c:'#ec4899'},
+        ].map(s=>(
+          <div key={s.l} style={{background:'#1f2937',borderRadius:8,padding:'11px 13px',borderLeft:`3px solid ${s.c}`}}>
+            <div style={{color:'#6b7280',fontSize:11,marginBottom:3}}>{s.l}</div>
+            <div style={{fontFamily:'Barlow Condensed',fontSize:24,fontWeight:700}}>{s.v}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+    <input ref={fileRef} type="file" accept=".json" style={{display:'none'}} onChange={importJSON}/>
+  </div>;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ROOT APP
+// ═══════════════════════════════════════════════════════════════
+function App(){
+  const [data,setRaw]=useState(null);
+  const [section,setSection]=useState('home');
+  const [workout,setWorkout]=useState(null);    // {plan,day}
+  const [editingPlan,setEditingPlan]=useState(null);
+  const [toast,showToast]=useToast();
+
+  function setData(d){ setRaw(d); db.save(d); }
+
+  useEffect(()=>{
+    let saved=db.load();
+    // Migrate old v1 (had 'persons' key) → start fresh
+    if(saved&&saved.persons){ saved={...SEED,completed:saved.completed||[]}; db.save(saved); }
+    setRaw(saved||SEED);
+    if(!saved) db.save(SEED);
+  },[]);
+
+  if(!data) return <div style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'100vh'}}>
+    <div style={{textAlign:'center'}}>
+      <div style={{width:36,height:36,border:'3px solid #1f2937',borderTopColor:'#3b82f6',borderRadius:'50%',animation:'spin .8s linear infinite',margin:'0 auto 12px'}}/>
+      <div style={{color:'#6b7280',fontSize:14}}>Caricamento...</div>
+    </div>
+  </div>;
+
+  const navItems=[
+    {id:'home',label:'Home',icon:IC.home},
+    {id:'plans',label:'Schede',icon:IC.calendar},
+    {id:'stats',label:'Stats',icon:IC.chart},
+    {id:'history',label:'Storico',icon:IC.history},
+    {id:'backup',label:'Backup',icon:IC.download},
+  ];
+
+  // ── Overlays (full screen, hide nav) ──
+  if(workout){
+    return <div style={{paddingBottom:20}}>
+      <div style={{padding:'16px 16px',maxWidth:680,margin:'0 auto'}}>
+        <WorkoutSession plan={workout.plan} day={workout.day} data={data} setData={setData} showToast={showToast} onBack={()=>setWorkout(null)}/>
+      </div>
+      <Toast t={toast}/>
+    </div>;
+  }
+  if(editingPlan){
+    return <div style={{paddingBottom:20}}>
+      <div style={{padding:'20px 16px',maxWidth:1000,margin:'0 auto'}}>
+        <PlanEditor plan={editingPlan} data={data} setData={setData} showToast={showToast} onBack={()=>setEditingPlan(null)}/>
+      </div>
+      <Toast t={toast}/>
+    </div>;
+  }
+
+  return <div style={{paddingBottom:80}}>
+    {/* ── Header ── */}
+    <header style={{background:'#111827',borderBottom:'1px solid #1f2937',padding:'13px 18px',display:'flex',alignItems:'center',justifyContent:'space-between',position:'sticky',top:0,zIndex:50}}>
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        <div style={{background:'#3b82f6',borderRadius:8,padding:'5px',display:'flex'}}>
+          <Ico d={IC.dumbbell} s={18} c="white"/>
+        </div>
+        <div>
+          <div style={{fontFamily:'Barlow Condensed',fontSize:17,fontWeight:700,lineHeight:1}}>FitTracker</div>
+          <div style={{fontSize:10,color:'#6b7280',fontWeight:500}}>BOCCIO</div>
+        </div>
+      </div>
+      <div style={{background:'#1f2937',borderRadius:8,padding:'4px 10px',display:'flex',alignItems:'center',gap:5}}>
+        <Ico d={IC.check} s={13} c="#22c55e"/>
+        <span style={{color:'#4ade80',fontSize:13,fontWeight:500}}>{data.completed.length}</span>
+        <span style={{color:'#6b7280',fontSize:12}}>sessioni</span>
+      </div>
+    </header>
+
+    <main style={{padding:'18px 16px',maxWidth:860,margin:'0 auto'}}>
+      {section==='home'   &&<HomeSection data={data} onStart={(plan,day)=>setWorkout({plan,day})}/>}
+      {section==='plans'  &&<PlansOverview data={data} setData={setData} showToast={showToast} onEdit={p=>setEditingPlan(p)}/>}
+      {section==='stats'  &&<StatsSection data={data}/>}
+      {section==='history'&&<HistorySection data={data}/>}
+      {section==='backup' &&<BackupSection data={data} setData={setData} showToast={showToast}/>}
+    </main>
+
+    {/* ── Bottom Nav ── */}
+    <div className="bottom-nav">
+      {navItems.map(n=>(
+        <div key={n.id} className={`bnav ${section===n.id?'active':''}`} onClick={()=>setSection(n.id)}>
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d={n.icon}/></svg>
+          <span>{n.label}</span>
+        </div>
+      ))}
+    </div>
+
+    <Toast t={toast}/>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
